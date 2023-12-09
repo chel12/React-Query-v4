@@ -1,35 +1,42 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useQuery } from '@tanstack/react-query';
+import todoService from './services/todo.service';
 
 function App() {
-  const [count, setCount] = useState(0)
+	//1 получить данные с сервера, понять где находится и API
+	// как пример json placeholder API. Ответ приходит в data. [] ключ .
+	//select позволяет после получения даты трансформировать их на этапе query, когда данные не пришли
+	const { isLoading, data } = useQuery(
+		['todos'],
+		() => todoService.getAll(),
+		{
+			select: ({ data }) => data,
+			onSuccess(data) {
+				alert(data[0].title); //действия после запроса
+			},
+			onError(err) { // при ошибке
+				alert(err);
+			},
+			// enabled:true //запрос по условию
+			//retry: 10 кол-во запросов до показывания ошибки
+		}
+	);
 
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+	return (
+		<div>
+			{isLoading ? (
+				<div>Loading...</div>
+			) : data?.length ? (
+				data.map((todo) => (
+					<div>
+						<b>{todo.id}</b>
+						{todo.title}
+					</div>
+				))
+			) : (
+				<h1>Data not found </h1>
+			)}
+		</div>
+	);
 }
 
-export default App
+export { App };
